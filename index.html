@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P4ssw0rd Game</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="startGame()">
+    <div class="center">
+        <div class="password">
+            <span class="pass">****</span>
+        </div>
+        <div class="attempts">
+        </div>
+    </div>
+    <div class="input">
+        <input type="text" name="pass_input" placeholder="****" value="" maxlength="8">
+        <input type="button" value="CONFIRMAR" onclick="checkInput()">
+    </div>
+    <script>
+        const pass = document.querySelector('.pass')
+        const attempts = document.querySelector('.attempts')
+        const pass_input = document.querySelector('[name="pass_input"]')
+
+        var password
+        var total_attempts = 0
+        var total_corrects = 0
+        var size_password = 8
+
+        let placeholder = ''
+        for(let i = 0; i < size_password; i++){
+            placeholder += '*'
+        }
+
+        pass_input.setAttribute('maxlength', size_password)
+        pass_input.setAttribute('placeholder', placeholder)
+
+        document.addEventListener('keyup', (event) => {
+            if(event.keyCode == 13){
+                event.preventDefault()
+                checkInput()
+            }
+        })
+
+        function startGame(){
+            password = generatePassword(size_password)
+        }
+
+        function generatePassword(size){
+            var result = []
+            var characters = '0123456789'
+            // var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+            var charactersLength = characters.length
+            for ( var i = 0; i < size; i++ ) {
+                result.push(characters.charAt(Math.floor(Math.random() * charactersLength)))
+            }
+            return result.join('')
+        }
+
+        function checkPassword(){
+            total_attempts++
+
+            var input = pass_input.value.toUpperCase()
+            // pass_input.value = ''
+
+            var characters = []
+            var c_chars = []
+            var c_counts = []
+
+            for(c in input){
+                var count = (password.match(new RegExp(input[c], 'g')) || []).length
+                if(!c_chars.includes(input[c])){
+                    c_chars.push(input[c])
+                    c_counts.push(count)
+                }
+                
+                characters.push({
+                    char: input[c],
+                    status: 'wrong'
+                })
+            }
+            
+            for(c in input){
+                if(input[c] == password[c]){
+                    var pos = c_chars.indexOf(input[c])
+                    c_counts[pos] -= 1
+                    characters[c].status = 'correct'
+                }
+            }
+            
+            for(c in input){
+                var pos = c_chars.indexOf(input[c])
+                if(characters[c].status == 'wrong'){
+                    if(c_counts[pos] > 0){
+                        c_counts[pos] -= 1
+                        characters[c].status = 'position'
+                    }
+                }
+            }
+
+            insertAttempt(characters)
+
+            if(total_corrects == size_password){
+                pass.innerText = 'PARABÉNS!'
+            } else {
+                pass.innerText = 'SENHA ERRADA!'
+            }
+        }
+
+        function checkInput(){
+            if(pass_input.value.toUpperCase().length < size_password){
+                pass.innerText = 'SENHA INCOMPLETA!'
+            } else {
+                checkPassword()
+            }
+        }
+
+        function insertAttempt(characters){
+            let attempt = `
+            <span class="attempt">
+                <span class="invert">Tentativa ${total_attempts}</span>`
+            for(c of characters){
+                attempt += `<span class="value ${c.status}">${c.char}</span>`
+                if(c.status == 'correct'){
+                    total_corrects++
+                }
+            }
+            attempt += `</span>`
+
+            attempts.innerHTML = attempt + attempts.innerHTML
+        }
+
+
+    </script>
+</body>
+</html>
